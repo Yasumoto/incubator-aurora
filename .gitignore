@@ -11,6 +11,7 @@
 /.vagrant/*
 /api/dist/*
 /atlassian-ide-plugin.xml
+/build.properties
 /build-support/*.pex
 /build-support/*.venv
 /build-support/python/*.venv

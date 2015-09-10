@@ -18,6 +18,8 @@ import java.util.Set;
 import com.google.common.base.Function;
 import com.google.common.collect.FluentIterable;
 
+import org.apache.aurora.common.util.BuildInfo;
+import org.apache.aurora.common.util.testing.FakeBuildInfo;
 import org.apache.aurora.common.util.testing.FakeClock;
 import org.apache.aurora.gen.storage.Snapshot;
 import org.apache.aurora.scheduler.base.Query;
@@ -67,9 +69,13 @@ interface TemporaryStorage {
     @Override
     public TemporaryStorage apply(Snapshot snapshot) {
       final Storage storage = DbUtil.createFlaggedStorage();
+      final BuildInfo buildInfo = new FakeBuildInfo().generateBuildInfo();
       FakeClock clock = new FakeClock();
       clock.setNowMillis(snapshot.getTimestamp());
-      final SnapshotStore<Snapshot> snapshotStore = new SnapshotStoreImpl(clock, storage);
+      final SnapshotStore<Snapshot> snapshotStore = new SnapshotStoreImpl(
+          buildInfo,
+          clock,
+          storage);
       snapshotStore.applySnapshot(snapshot);
 
       return new TemporaryStorage() {

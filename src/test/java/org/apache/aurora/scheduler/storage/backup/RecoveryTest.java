@@ -23,6 +23,7 @@ import org.apache.aurora.common.base.Command;
 import org.apache.aurora.common.quantity.Amount;
 import org.apache.aurora.common.quantity.Time;
 import org.apache.aurora.common.testing.easymock.EasyMockTest;
+import org.apache.aurora.common.util.testing.FakeBuildInfo;
 import org.apache.aurora.common.util.testing.FakeClock;
 import org.apache.aurora.gen.storage.SchedulerMetadata;
 import org.apache.aurora.gen.storage.Snapshot;
@@ -71,7 +72,8 @@ public class RecoveryTest extends EasyMockTest {
   public void setUp() {
     final File backupDir = Files.createTempDir();
     addTearDown(() -> FileUtils.deleteDirectory(backupDir));
-    snapshotStore = createMock(new Clazz<SnapshotStore<Snapshot>>() { });
+    snapshotStore = createMock(new Clazz<SnapshotStore<Snapshot>>() {
+    });
     distributedStore = createMock(DistributedSnapshotStore.class);
     primaryStorage = createMock(Storage.class);
     storeProvider = createMock(MutableStoreProvider.class);
@@ -155,7 +157,11 @@ public class RecoveryTest extends EasyMockTest {
     return new Snapshot()
         .setHostAttributes(ImmutableSet.of())
         .setCronJobs(ImmutableSet.of())
-        .setSchedulerMetadata(new SchedulerMetadata().setVersion(CURRENT_API_VERSION))
+        .setSchedulerMetadata(new SchedulerMetadata()
+            .setVersion(CURRENT_API_VERSION)
+            .setMachine(FakeBuildInfo.MACHINE)
+            .setRevision(FakeBuildInfo.GIT_REVISION)
+            .setTag(FakeBuildInfo.GIT_TAG))
         .setQuotaConfigurations(ImmutableSet.of())
         .setTasks(IScheduledTask.toBuildersSet(ImmutableSet.copyOf(tasks)))
         .setLocks(ImmutableSet.of())

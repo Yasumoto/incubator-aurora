@@ -22,6 +22,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 
 import org.apache.aurora.common.testing.easymock.EasyMockTest;
+import org.apache.aurora.common.util.testing.FakeBuildInfo;
 import org.apache.aurora.common.util.testing.FakeClock;
 import org.apache.aurora.gen.Attribute;
 import org.apache.aurora.gen.HostAttributes;
@@ -68,13 +69,18 @@ public class SnapshotStoreImplTest extends EasyMockTest {
 
   private StorageTestUtil storageUtil;
   private SnapshotStore<Snapshot> snapshotStore;
+  private FakeBuildInfo fakeBuildInfo;
 
   @Before
   public void setUp() {
     FakeClock clock = new FakeClock();
     clock.setNowMillis(NOW);
     storageUtil = new StorageTestUtil(this);
-    snapshotStore = new SnapshotStoreImpl(clock, storageUtil.storage);
+    fakeBuildInfo = new FakeBuildInfo();
+    snapshotStore = new SnapshotStoreImpl(
+        fakeBuildInfo.generateBuildInfo(),
+        clock,
+        storageUtil.storage);
   }
 
   private static IJobUpdateKey makeKey(String id) {
@@ -106,6 +112,9 @@ public class SnapshotStoreImplTest extends EasyMockTest {
         .setTimestampMs(12345L));
     SchedulerMetadata metadata = new SchedulerMetadata()
         .setFrameworkId(frameworkId)
+        .setMachine(FakeBuildInfo.MACHINE)
+        .setRevision(FakeBuildInfo.GIT_REVISION)
+        .setTag(FakeBuildInfo.GIT_TAG)
         .setVersion(CURRENT_API_VERSION);
     IJobUpdateKey updateId1 =  makeKey("updateId1");
     IJobUpdateKey updateId2 = makeKey("updateId2");
@@ -171,7 +180,8 @@ public class SnapshotStoreImplTest extends EasyMockTest {
             new StoredJobUpdateDetails(updateDetails1.newBuilder(), lockToken),
             new StoredJobUpdateDetails(updateDetails2.newBuilder(), null)));
 
-    assertEquals(expected, snapshotStore.createSnapshot());
+    Snapshot snapshot = snapshotStore.createSnapshot();
+    assertEquals(expected, snapshot);
 
     snapshotStore.applySnapshot(expected);
   }
